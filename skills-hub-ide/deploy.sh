@@ -2,12 +2,12 @@
 
 # 自动获取当前脚本所在目录
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CORE_SCRIPT="$SCRIPT_DIR/batch_skills_symlink.sh"
+CORE_SCRIPT="$SCRIPT_DIR/link.sh"
 
 # 检查核心脚本是否存在
 if [ ! -f "$CORE_SCRIPT" ]; then
   echo "❌ 错误：脚本缺少执行文件，未找到核心脚本 -> $CORE_SCRIPT"
-  echo "请确保 distribute_skills.sh 和 batch_skills_symlink.sh 在同一目录下。"
+  echo "请确保 deploy.sh 和 link.sh 在同一目录下。"
   exit 1
 fi
 
