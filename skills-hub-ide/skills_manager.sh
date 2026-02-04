@@ -157,17 +157,18 @@ while true; do
   # 读取按键 (兼容不同终端)
   IFS= read -rsn1 key
   if [[ "$key" == $'\x1b' ]]; then
-    IFS= read -rsn2 -t 0.1 key
-    if [[ "$key" == "[A" ]]; then
+    # 读取可能的转义序列
+    read -rsn2 -t 0.001 escape_seq
+    if [[ "$escape_seq" == "[A" ]]; then
       # Up
       ((current--))
       if [ $current -lt 0 ]; then current=$((${#IDE_PATHS[@]} - 1)); fi
-    elif [[ "$key" == "[B" ]]; then
+    elif [[ "$escape_seq" == "[B" ]]; then
       # Down
       ((current++))
       if [ $current -ge ${#IDE_PATHS[@]} ]; then current=0; fi
-    elif [[ -z "$key" ]]; then
-      # ESC key press (without follow-up codes)
+    else
+      # 确实是 ESC 键 (无后续序列或超时)
       echo ""
       echo "已退出。"
       exit 0
