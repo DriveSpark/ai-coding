@@ -90,8 +90,16 @@ draw_menu() {
   # 简单起见，我们每次清屏重画
   clear
   echo "=== 请选择要同步的目标 IDE ==="
-  echo "↑/↓: 移动光标 | 空格: 选中/取消 | 回车: 确认执行"
+  echo "↑/↓: 移动光标 | 空格: 选中/取消 | 回车: 确认执行 | ESC/q: 退出"
   echo ""
+
+  # 显示临时消息
+  if [ -n "$flash_msg" ]; then
+    echo -e "$flash_msg"
+    flash_msg="" # 显示一次后清除
+  else
+    echo "" # 占位符，保持布局稳定
+  fi
   
   # 收集已选中的项
   selected_names=""
@@ -149,7 +157,7 @@ while true; do
   # 读取按键 (兼容不同终端)
   IFS= read -rsn1 key
   if [[ "$key" == $'\x1b' ]]; then
-    IFS= read -rsn2 key
+    IFS= read -rsn2 -t 0.1 key
     if [[ "$key" == "[A" ]]; then
       # Up
       ((current--))
@@ -158,6 +166,11 @@ while true; do
       # Down
       ((current++))
       if [ $current -ge ${#IDE_PATHS[@]} ]; then current=0; fi
+    elif [[ -z "$key" ]]; then
+      # ESC key press (without follow-up codes)
+      echo ""
+      echo "已退出。"
+      exit 0
     fi
   elif [[ "$key" == " " ]]; then
     # Space (Toggle)
@@ -168,7 +181,26 @@ while true; do
     fi
   elif [[ "$key" == "" ]]; then
     # Enter
-    break
+    # 检查是否至少选择了一个
+    has_selection=false
+    for ((i=0; i<${#IDE_PATHS[@]}; i++)); do
+      if [ "${selected[i]}" = true ]; then
+        has_selection=true
+        break
+      fi
+    done
+    
+    if [ "$has_selection" = true ]; then
+      break
+    else
+      # 显示提示信息（不退出循环）
+      # 这里我们可以闪烁一下或者打印提示，但因为马上会重绘，所以我们可以在 draw_menu 里加状态，或者简单的 sleep 一下
+      # 为了简单，我们可以在菜单上方加一个临时错误提示，或者直接在 draw_menu 里处理
+      # 这里我们采用一个简单的方式：不退出，继续循环。
+      # 为了让用户感知，我们可以设置一个临时消息变量
+      flash_msg="\033[1;31m⚠️  请至少选择一个目标 IDE！\033[0m"
+      continue
+    fi
   elif [[ "$key" == "q" ]]; then
     echo ""
     echo "已退出。"
