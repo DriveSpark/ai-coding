@@ -107,8 +107,10 @@ fi
 # 4. 开始创建链接
 cd "$target_dir" || exit 1
 
-count_created=0
-count_skipped=0
+created_list=()
+skipped_list=()
+
+echo ">> 正在扫描并创建链接..."
 
 for skill_dir in "$source_root"/*/; do
   [ -d "$skill_dir" ] || continue
@@ -116,24 +118,50 @@ for skill_dir in "$source_root"/*/; do
   skill_name=$(basename "$skill_dir")
   
   if [ -e "$skill_name" ]; then
-    echo "已存在，跳过: $skill_name"
-    ((count_skipped++))
+    skipped_list+=("$skill_name")
     continue
   fi
   
-  echo "创建软链接: $skill_name → $skill_dir"
   ln -s "$skill_dir" "$skill_name"
-  ((count_created++))
+  created_list+=("$skill_name")
 done
 
-# 5. 总结
+# 5. 总结 (现代 CLI 风格)
 echo ""
-echo "完成！"
-echo "创建了 $count_created 个软链接"
-echo "跳过了 $count_skipped 个已存在的项"
+echo "========================================"
+echo "           执行结果汇总           "
+echo "========================================"
+
+if [ ${#created_list[@]} -gt 0 ]; then
+  echo -e "\033[1;32m✅  新增链接 (${#created_list[@]}):\033[0m"
+  for name in "${created_list[@]}"; do
+    echo "   + $name"
+  done
+else
+  echo "✨  没有新增链接"
+fi
+
 echo ""
-echo "快速检查软链接列表："
-ls -l "$target_dir" | grep '^l' | head -n 10   # 只显示前10个软链接，避免输出太多
-echo "...（如果太多，可用 ls -l $target_dir 查看全部）"
+
+if [ ${#skipped_list[@]} -gt 0 ]; then
+  echo -e "\033[1;33m⏭️  已存在/跳过 (${#skipped_list[@]}):\033[0m"
+  # 如果跳过的太多，可以只显示前几个
+  if [ ${#skipped_list[@]} -gt 10 ]; then
+     for ((i=0; i<10; i++)); do
+       echo "   • ${skipped_list[$i]}"
+     done
+     echo "   ... (以及其他 $((${#skipped_list[@]} - 10)) 个)"
+  else
+     for name in "${skipped_list[@]}"; do
+       echo "   • $name"
+     done
+  fi
+else
+  echo "✨  没有跳过的项"
+fi
+
 echo ""
-echo "提示：真实文件都在源路径里，更新源文件夹内容后链接会自动生效。"
+echo "----------------------------------------"
+echo "📂 目标目录: $target_dir"
+echo "🎉 完成！"
+echo ""

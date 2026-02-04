@@ -7,7 +7,7 @@ CORE_SCRIPT="$SCRIPT_DIR/link.sh"
 # 检查核心脚本是否存在
 if [ ! -f "$CORE_SCRIPT" ]; then
   echo "❌ 错误：脚本缺少执行文件，未找到核心脚本 -> $CORE_SCRIPT"
-  echo "请确保 deploy.sh 和 link.sh 在同一目录下。"
+  echo "请确保 skills_manager.sh 和 link.sh 在同一目录下。"
   exit 1
 fi
 
@@ -93,6 +93,28 @@ draw_menu() {
   echo "↑/↓: 移动光标 | 空格: 选中/取消 | 回车: 确认执行"
   echo ""
   
+  # 收集已选中的项
+  selected_names=""
+  for ((i=0; i<${#IDE_PATHS[@]}; i++)); do
+    if [ "${selected[i]}" = true ]; then
+      item="${IDE_PATHS[$i]}"
+      name="${item%%:*}"
+      if [ -z "$selected_names" ]; then
+        selected_names="$name"
+      else
+        selected_names="$selected_names, $name"
+      fi
+    fi
+  done
+
+  # 打印当前选中状态
+  if [ -z "$selected_names" ]; then
+    echo "当前选中: (无)"
+  else
+    echo "当前选中: \033[1;32m$selected_names\033[0m"
+  fi
+  echo "----------------------------------------"
+  
   for ((i=0; i<${#IDE_PATHS[@]}; i++)); do
     item="${IDE_PATHS[$i]}"
     name="${item%%:*}"
@@ -100,19 +122,23 @@ draw_menu() {
     
     # 选中标记
     if [ "${selected[i]}" = true ]; then
-      mark="●"
+      mark="\033[1;32m●\033[0m" # 绿色圆点
     else
       mark="○"
     fi
     
     # 光标标记
     if [ $i -eq $current ]; then
-      prefix="> "
+      prefix="\033[1;36m> \033[0m" # 青色箭头
+      line_style="\033[1m" # 加粗当前行
+      reset_style="\033[0m"
     else
       prefix="  "
+      line_style=""
+      reset_style=""
     fi
     
-    echo "${prefix}${mark} ${name} -> ${path}"
+    echo -e "${prefix}${mark} ${line_style}${name}${reset_style} -> ${path}"
   done
 }
 
