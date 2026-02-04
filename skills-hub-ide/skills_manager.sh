@@ -111,7 +111,7 @@ draw_menu() {
   if [ -z "$selected_names" ]; then
     echo "当前选中: (无)"
   else
-    echo "当前选中: \033[1;32m$selected_names\033[0m"
+    echo -e "当前选中: \033[1;32m$selected_names\033[0m"
   fi
   echo "----------------------------------------"
   
