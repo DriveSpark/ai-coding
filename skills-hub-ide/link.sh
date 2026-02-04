@@ -12,6 +12,20 @@ yes_arg=false
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
+    -h|--help)
+      echo "用法: $(basename "$0") [选项]"
+      echo ""
+      echo "选项:"
+      echo "  -s, --source <path>   源文件夹路径 (包含各个 skill 子目录)"
+      echo "  -t, --target <path>   目标文件夹路径 (软链接将被创建在此)"
+      echo "  -y, --yes             静默模式 (自动确认，不进行交互询问)"
+      echo "  -h, --help            显示此帮助信息"
+      echo ""
+      echo "示例:"
+      echo "  $(basename "$0")                                      # 交互式运行"
+      echo "  $(basename "$0") -s ./my-skills -t ~/.agents/skills   # 命令行运行"
+      exit 0
+      ;;
     -s|--source) source_arg="$2"; shift ;;
     -t|--target) target_arg="$2"; shift ;;
     -y|--yes) yes_arg=true ;;
