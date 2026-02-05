@@ -14,45 +14,50 @@ class Key:
     OTHER = 'OTHER'
 
 def get_key():
-    """读取单个按键，支持识别箭头键"""
+    """读取单个按键，支持识别箭头键（使用 os.read 绕过缓冲区）"""
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-        if ch == '\x1b':  # ESC sequence
-            # 设置非阻塞读取后续字符
+        tty.setraw(fd)
+        
+        # 1. 使用 os.read 直接从文件描述符读取，避免 sys.stdin 缓冲问题
+        ch1 = os.read(fd, 1)
+        
+        if ch1 == b'\x1b':  # ESC sequence
+            # 2. 尝试读取后续字节
             import select
-            # 增加超时时间以提高稳定性 (0.1 -> 0.2)
-            dr, dw, de = select.select([sys.stdin], [], [], 0.2)
-            if not dr:
+            # 使用 fd 进行 select
+            r, w, x = select.select([fd], [], [], 0.1)
+            if not r:
                 return Key.ESC
             
-            # 尝试读取后续字符
-            ch2 = sys.stdin.read(1)
+            # 读取第二个字节
+            ch2 = os.read(fd, 1)
             
-            # 标准箭头键: ESC [ A / B
-            if ch2 == '[':
-                ch3 = sys.stdin.read(1)
-                if ch3 == 'A': return Key.UP
-                if ch3 == 'B': return Key.DOWN
-                return Key.OTHER
+            if ch2 == b'[' or ch2 == b'O':
+                r, w, x = select.select([fd], [], [], 0.1)
+                if not r:
+                    return Key.OTHER
                 
-            # 应用模式箭头键 (Application Mode): ESC O A / B
-            if ch2 == 'O':
-                ch3 = sys.stdin.read(1)
-                if ch3 == 'A': return Key.UP
-                if ch3 == 'B': return Key.DOWN
-                return Key.OTHER
+                ch3 = os.read(fd, 1)
+                seq = ch1 + ch2 + ch3
                 
+                if seq == b'\x1b[A' or seq == b'\x1bOA':
+                    return Key.UP
+                if seq == b'\x1b[B' or seq == b'\x1bOB':
+                    return Key.DOWN
+                
+                return Key.OTHER
+            
             return Key.OTHER
-        elif ch == '\r' or ch == '\n':
+
+        elif ch1 == b'\r' or ch1 == b'\n':
             return Key.ENTER
-        elif ch == ' ':
+        elif ch1 == b' ':
             return Key.SPACE
-        elif ch == 'q': # 支持 'q' 退出
+        elif ch1 == b'q': # 支持 'q' 退出
             return Key.QUIT
-        elif ch == '\x03': # Ctrl+C
+        elif ch1 == b'\x03': # Ctrl+C
             raise KeyboardInterrupt
         else:
             return Key.OTHER
