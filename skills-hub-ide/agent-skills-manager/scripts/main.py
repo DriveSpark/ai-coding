@@ -54,7 +54,7 @@ def prepare_ide_environment():
         
     return available_ides
 
-def _install_single_skill(source_path: Path, target_ides: list):
+def _install_single_skill(source_path: Path, target_ides: list) -> bool:
     skill_name = source_path.name
     
     log_header(f"安装 Skill: {skill_name}")
@@ -73,23 +73,30 @@ def _install_single_skill(source_path: Path, target_ides: list):
     # 我们需要确认 target 是否有效可用
     if not (hub_target.exists() or (hub_target.is_symlink() and hub_target.exists())):
          log_error("无法链接到中转站，安装中止。")
-         return # Batch 模式下不要直接 exit
+         return False # Batch 模式下不要直接 exit
 
     # 3. 探测 IDE 并分发 (Hub -> IDEs)
     log_step(2, 2, "分发到选定的 IDE...")
     
     if not target_ides:
         log_info("未选择 IDE，跳过分发步骤。")
+        return True # 虽然没分发，但中转站链接成功也算成功的一部分？或者算 True 以继续
     else:
+        all_targets_ok = True
         for ide in target_ides:
             ide_name = ide['name']
             ide_skills_dir = ide['path']
             final_target = ide_skills_dir / skill_name
             
             # 使用 Hub 中的路径作为源，实现 Source -> Hub -> IDE 的链路
-            create_symlink(hub_target, final_target)
-
-    log_success(f"安装完成: {skill_name}")
+            if not create_symlink(hub_target, final_target):
+                all_targets_ok = False
+        
+        if all_targets_ok:
+             log_success(f"安装完成: {skill_name}")
+             return True
+        else:
+             return False
 
 def process_install_path(source_path_str: str):
     path = Path(source_path_str).resolve()
@@ -107,39 +114,43 @@ def process_install_path(source_path_str: str):
     if not target_ides:
         log_warn("未选择任何 IDE，将仅安装到中转站。")
     
-    # Case 1: 目标本身就是一个 Skill
     if is_skill_dir(path):
-        _install_single_skill(path, target_ides)
-        return
-
-    # Case 2: 目标是一个包含多个 Skills 的父目录
-    log_info(f"检测到 '{path.name}' 未包含 Skill 定义文件，尝试扫描子目录...")
-    found_skills = []
-    
-    # 扫描一级子目录
-    try:
-        for child in path.iterdir():
-            if child.is_dir() and not child.name.startswith('.'): # 忽略隐藏目录
-                if is_skill_dir(child):
-                    found_skills.append(child)
-    except Exception as e:
-        log_error(f"扫描目录失败: {e}")
-        return
-
-    if found_skills:
-        log_info(f"发现 {len(found_skills)} 个潜在的 Skills，开始批量安装...")
-        success_count = 0
-        for skill_path in found_skills:
-            try:
-                _install_single_skill(skill_path, target_ides)
-                success_count += 1
-            except Exception as e:
-                log_error(f"安装 {skill_path.name} 时发生错误: {e}")
-        
-        print("\n" + "=" * 40)
-        log_success(f"批量安装结束。成功: {success_count}/{len(found_skills)}")
+        # 单个 Skill 安装
+        if _install_single_skill(path, target_ides):
+             log_success("单 Skill 安装成功！")
+        else:
+             log_error("单 Skill 安装失败！")
     else:
-        log_error(f"在 '{path}' 下未发现有效的 Skill (需包含 SKILL.md 或 skill.json)")
+        # 批量安装 (扫描子目录)
+        log_info(f"路径 {path} 不是标准 Skill 目录，尝试扫描子目录...")
+        sub_skills = [p for p in path.iterdir() if p.is_dir() and is_skill_dir(p)]
+        
+        if not sub_skills:
+            log_warn("未在子目录中发现任何有效的 Skill (需包含 SKILL.md 或 skill.json)")
+            return
+            
+        log_info(f"发现 {len(sub_skills)} 个待安装的 Skill")
+        
+        success_count = 0
+        failed_list = []
+        
+        for skill_path in sub_skills:
+            print("-" * 40)
+            if _install_single_skill(skill_path, target_ides):
+                success_count += 1
+            else:
+                failed_list.append(skill_path.name)
+                
+        print("=" * 40)
+        log_success(f"批量安装结束。成功: {success_count}/{len(sub_skills)}")
+        
+        if failed_list:
+            log_warn(f"失败列表 ({len(failed_list)}): {', '.join(failed_list)}")
+            log_warn("如果遇到权限错误 (Errno 1)，请复制以下命令在外部终端运行：")
+            
+            # 生成一键修复命令
+            cmd_parts = [f"python3 {sys.argv[0]} install {source_path_str}"]
+            print(f"\n{BOLD}{CYAN}{' '.join(cmd_parts)}{RESET}\n")
 
 def main():
     parser = argparse.ArgumentParser(description="AI Agent Skill Manager")
