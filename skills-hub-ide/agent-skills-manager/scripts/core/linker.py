@@ -43,6 +43,13 @@ def create_symlink(source: Path, target: Path):
             
         log_info(f"  [成功] 链接创建: {target.name} -> {source}")
         return True
+    except OSError as e:
+        if e.errno == 1:
+            log_error(f"权限不足或操作被拒绝 (Errno 1): {e}")
+            log_error("如果您在受限环境（如 IDE 内置终端）中运行，请尝试在外部系统终端中运行此命令。")
+        else:
+            log_error(f"创建链接失败: {e}")
+        return False
     except Exception as e:
         log_error(f"创建链接失败: {e}")
         return False
