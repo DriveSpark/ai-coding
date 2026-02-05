@@ -7,7 +7,7 @@ from core.linker import create_symlink, ensure_hub_exists
 from core.menu import interactive_select, confirm_action
 from core.utils import (
     log_info, log_error, log_success, log_warn, 
-    log_header, log_step, BOLD, CYAN, GREEN, RESET
+    log_header, log_step, BOLD, CYAN, GREEN, RED, RESET
 )
 
 def is_skill_dir(path: Path) -> bool:
@@ -142,15 +142,21 @@ def process_install_path(source_path_str: str):
                 failed_list.append(skill_path.name)
                 
         print("=" * 40)
-        log_success(f"批量安装结束。成功: {success_count}/{len(sub_skills)}")
+        # 优化总结行显示
+        summary_line = f"批量安装结束。{GREEN}成功: {success_count}{RESET} ; {RED}失败: {len(failed_list)}{RESET}"
+        log_success(summary_line)
         
         if failed_list:
-            log_warn(f"失败列表 ({len(failed_list)}): {', '.join(failed_list)}")
+            log_warn(f"失败列表 ({len(failed_list)}):")
+            for name in failed_list:
+                print(f"  {RED}- {name}{RESET}")
+                
+            print("") # 空行
             log_warn("如果遇到权限错误 (Errno 1)，请复制以下命令在外部终端运行：")
             
             # 生成一键修复命令
             cmd_parts = [f"python3 {sys.argv[0]} install {source_path_str}"]
-            print(f"\n{BOLD}{CYAN}{' '.join(cmd_parts)}{RESET}\n")
+            print(f"\n{BOLD}{GREEN}{' '.join(cmd_parts)}{RESET}\n")
 
 def main():
     parser = argparse.ArgumentParser(description="AI Agent Skill Manager")
