@@ -2,8 +2,9 @@ import argparse
 import sys
 from pathlib import Path
 from core.config import AGENTS_HUB
-from core.detector import detect_ides
+from core.detector import detect_ide_candidates
 from core.linker import create_symlink, ensure_hub_exists
+from core.menu import interactive_select, confirm_action
 from core.utils import (
     log_info, log_error, log_success, log_warn, 
     log_header, log_step, BOLD, CYAN, GREEN, RESET
@@ -13,50 +14,45 @@ def is_skill_dir(path: Path) -> bool:
     """判断一个目录是否是有效的 Skill (包含 SKILL.md 或 skill.json)"""
     return (path / "SKILL.md").exists() or (path / "skill.json").exists()
 
-def select_target_ides(available_ides: list) -> list:
+def prepare_ide_environment():
     """
-    交互式让用户选择要安装的 IDE
+    检测并准备 IDE 环境 (交互式创建目录)
     """
-    if not available_ides:
-        log_warn("未检测到任何支持的 IDE，安装可能仅限于中转站。")
-        return []
-
-    print(f"\n{BOLD}{CYAN}检测到以下 IDE 环境:{RESET}")
-    for idx, ide in enumerate(available_ides):
-        print(f"  [{idx + 1}] {GREEN}{ide['name']}{RESET} ({ide['path']})")
+    log_info("正在扫描本机 AI IDE 环境...")
+    candidates = detect_ide_candidates()
     
-    print(f"\n{BOLD}请选择要安装的目标 IDE:{RESET}")
-    print("  - 输入序号 (如 '1' 或 '1,2')")
-    print("  - 输入 'a' 或 'all' 全选")
-    print("  - 直接回车默认全选")
+    if not candidates:
+        log_error("未检测到任何已知 IDE 环境 (Trae, Antigravity 等)。")
+        sys.exit(1)
+        
+    available_ides = []
     
-    choice = input(f"{BOLD}您的选择 > {RESET}").strip().lower()
-    
-    if choice in ['', 'a', 'all']:
-        log_info("已选择: 所有 IDE")
-        return available_ides
-    
-    selected_indices = []
-    try:
-        parts = choice.replace(',', ' ').split()
-        for part in parts:
-            idx = int(part) - 1
-            if 0 <= idx < len(available_ides):
-                selected_indices.append(idx)
+    for ide in candidates:
+        name = ide['name']
+        path = ide['path']
+        exists = ide['exists']
+        
+        if exists:
+            log_success(f"发现: {name} -> {path}")
+            available_ides.append(ide)
+        else:
+            # 询问是否创建
+            if confirm_action(f"{BOLD}发现 {name} 环境，但缺少 skills 目录。是否创建?{RESET}"):
+                try:
+                    path.mkdir(parents=True, exist_ok=True)
+                    log_success(f"已创建: {path}")
+                    ide['exists'] = True
+                    available_ides.append(ide)
+                except Exception as e:
+                    log_error(f"无法创建目录 {path}: {e}")
             else:
-                log_warn(f"忽略无效序号: {part}")
-    except ValueError:
-        log_error("输入格式无效，请输入数字序号。")
-        return []
+                log_warn(f"跳过 {name}")
+
+    if not available_ides:
+        log_error("未检测到合适的安装环境，程序退出。")
+        sys.exit(1)
         
-    if not selected_indices:
-        log_warn("未选择任何 IDE，将仅安装到中转站。")
-        return []
-        
-    selected_ides = [available_ides[i] for i in selected_indices]
-    names = ", ".join([ide['name'] for ide in selected_ides])
-    log_info(f"已选择: {names}")
-    return selected_ides
+    return available_ides
 
 def _install_single_skill(source_path: Path, target_ides: list):
     skill_name = source_path.name
@@ -102,10 +98,15 @@ def process_install_path(source_path_str: str):
         log_error(f"路径不存在: {path}")
         return
 
-    # 0. 预先探测并选择 IDE (只做一次)
-    all_ides = detect_ides()
-    target_ides = select_target_ides(all_ides)
-
+    # 0. 预先探测并准备 IDE 环境
+    available_ides = prepare_ide_environment()
+    
+    # 交互式选择目标 IDE
+    target_ides = interactive_select(available_ides, title="请选择要同步的目标 IDE")
+    
+    if not target_ides:
+        log_warn("未选择任何 IDE，将仅安装到中转站。")
+    
     # Case 1: 目标本身就是一个 Skill
     if is_skill_dir(path):
         _install_single_skill(path, target_ides)
