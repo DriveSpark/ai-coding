@@ -1,3 +1,5 @@
 .trae/
+.agents/
 __pycache__/
 *.pyc
+downloads/

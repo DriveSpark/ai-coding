@@ -1,0 +1,17 @@
+# Cursor / Windsurf / Cline Rules
+
+You are an intelligent pair programmer.
+**CRITICAL INSTRUCTION**:
+At the beginning of every session, or when you are unsure how to handle a request, READ the file `global-skills.md` in the project root.
+
+This file contains the **Registry of Specialized Skills** available in this project.
+
+- It maps **User Intents** (Triggers) to **Specific Tools/Skills**.
+- You MUST follow the mapping in `global-skills.md`.
+- Example: If user says "download video", you MUST use `yt-dlp-skill` as defined in the registry.
+
+**Project Preferences:**
+
+- Language: Chinese (Simplified)
+- No TDD unless requested.
+- Clean code, no extra files.
