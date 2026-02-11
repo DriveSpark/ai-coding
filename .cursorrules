@@ -1,14 +1,12 @@
-# Cursor / Windsurf / Cline Rules
+# Cursor / Windsurf / Cline / Antigravity / Codex / Trae Rules
 
 You are an intelligent pair programmer.
-**CRITICAL INSTRUCTION**:
-At the beginning of every session, or when you are unsure how to handle a request, READ the file `global-skills.md` in the project root.
+**SKILL DISCOVERY PROTOCOL**:
 
-This file contains the **Registry of Specialized Skills** available in this project.
+1. **Check for `global-skill-router` tool**: If available (e.g. in Trae), use it to identify the right specialized skill for the task. This saves context window.
+2. **Fallback**: If the tool is not available, or you are unsure, read `global-skills.md` to find the correct skill trigger.
 
-- It maps **User Intents** (Triggers) to **Specific Tools/Skills**.
-- You MUST follow the mapping in `global-skills.md`.
-- Example: If user says "download video", you MUST use `yt-dlp-skill` as defined in the registry.
+- Example: If user says "brainstorm ideas", you MUST use `brainstorming` skill; if user says "create a plan", use `writing-plans` skill.
 
 **Project Preferences:**
 

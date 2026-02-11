@@ -67,8 +67,14 @@
 
 ## 🚀 Usage Guide for Any AI IDE
 
-To activate these skills in another AI environment (Cursor, Windsurf, Cline, etc.):
+### Best Practice (Token Efficient)
+
+If your IDE supports Custom Skills (like Trae), use the `global-skill-router` skill. This allows the agent to "lazy load" the skill map only when needed, saving tokens.
+
+### Standard Setup (Universal)
+
+For IDEs without skill support (Cursor, Windsurf, Cline):
 
 1.  **Ensure this file exists** in the project root: `global-skills.md`
 2.  **Add to System Prompt / Custom Instructions**:
-    > "Always read `global-skills.md` to understand available tools and their triggers. When user intent matches a trigger, use the specified skill."
+    > "Check `global-skills.md` or use `global-skill-router` to understand available tools and their triggers."
