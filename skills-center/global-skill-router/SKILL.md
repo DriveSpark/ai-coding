@@ -5,7 +5,7 @@ description: Use this skill to route complex user requests to the appropriate sp
 
 # Global Skill Router
 
-Use this skill when you are unsure which specialized tool to use, or when the user's request involves specific domains (media, docs, design, git, etc.) that might have optimized skills.
+Use this skill when you are unsure which specialized tool to use, or when the user's request falls into these primary domains: Development & Engineering, Documents & Office, Design & Creative, Planning & Strategy, or Skill Management.
 
 ## Skill Registry
 
