@@ -42,8 +42,6 @@ Use this skill when you are unsure which specialized tool to use, or when the us
 | **`skill-creator`**                  | create skill, new capability, custom tool            | Use tool: `skill-creator`                  |
 | **`writing-skills`**                 | edit skill, modify capability, fix skill             | Use tool: `writing-skills`                 |
 | **`using-superpowers`**              | help, guide, how to use skills                       | Use tool: `using-superpowers`              |
-| **`yt-dlp-skill`**                   | download video, youtube, yt-dlp, media extraction    | Use tool: `yt-dlp-skill`                   |
-| **`remotion-best-practices`**        | create video, remotion, programmatic video           | Use tool: `remotion-best-practices`        |
 
 ## Usage
 
