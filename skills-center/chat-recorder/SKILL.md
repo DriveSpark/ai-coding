@@ -18,7 +18,9 @@ description: 专门用于记录和汇总当前的对话内容（用户输入和 
 ## 操作步骤
 
 1.  **准备工作**
-    - **用户 (Author)**: 获取当前操作系统用户名 (例如 `whoami`)。
+    - **用户 (Author)**: 优先获取 Git 用户名，若无则回退到系统用户名。
+      - 执行 `git config user.name`，若有返回值则作为 `<username>`。
+      - 若无，则执行 `whoami` 作为 `<username>`。
     - **日期 (Date)**: 获取当前日期 (格式 `YYYY-MM-DD`)。
     - **目标路径**: `./workspaces/devs/<username>/`。
     - **文件名**: `<YYYY-MM-DD>-chat-log.md`。
