@@ -70,13 +70,13 @@
 
 ## 6. 产出文件清单
 
-| 文件                                             | 内容                  |
-| ------------------------------------------------ | --------------------- |
-| `docs/learning-method/01-仿写学习法-design.md` | 本设计文档（背景与设计决策） |
-| `docs/learning-method/02-仿写学习法.md`        | 完整方法论正文        |
-| `docs/learning-method/templates/仿写计划模板.md`       | 可复用的仿写计划模板  |
-| `docs/learning-method/templates/阶段总结模板.md`       | 阶段总结模板          |
-| `docs/learning-method/templates/差距分析模板.md`       | 项目复盘/差距分析模板 |
+| 文件                                        | 内容                         |
+| ------------------------------------------- | ---------------------------- |
+| `learning-method/01-仿写学习法-design.md`   | 本设计文档（背景与设计决策） |
+| `learning-method/02-仿写学习法.md`          | 完整方法论正文               |
+| `learning-method/templates/仿写计划模板.md` | 可复用的仿写计划模板         |
+| `learning-method/templates/阶段总结模板.md` | 阶段总结模板                 |
+| `learning-method/templates/差距分析模板.md` | 项目复盘/差距分析模板        |
 
 ## 7. 未完成的问题
 
